@@ -2,28 +2,15 @@
 #include "../DevLib/string.hpp"
 #include "visionalgs.hpp"
 #include "../DevLib/Exceptions.hpp"
+#include "camera.hpp"
 #include <opencv2/imgproc/imgproc.hpp>
 
 //----------------------------------------------------------//
-//  Constructor for camera location based off string
-VisionServer::VisionServer::VisionServer(int port, std::string location, int ThreshPort) : ThresholdHost(ThreshPort)
-{
-    start(port);
-    cam = cv::VideoCapture(location);
-    if(!cam.isOpened()) { throw dev::exception("Unable to open the image!"); }
-    initializeThresholdHost();
-    std::thread(&VisionServer::VisionServer::cameraThread, this).detach();
-}
-
-//----------------------------------------------------------//
 //  Constructor for camera based off a camera device ID
-VisionServer::VisionServer::VisionServer(int port, int capDev, int ThreshPort) : ThresholdHost(ThreshPort)
+VisionServer::VisionServer::VisionServer(int MainPort, int ThresholdConfigurationPort) : ThresholdHost(ThresholdConfigurationPort)
 {
-    start(port);
-    cam = cv::VideoCapture(capDev);
-    if(!cam.isOpened()) { throw dev::exception("Unable to open the image!"); }
+    start(MainPort);
     initializeThresholdHost();
-    std::thread(&VisionServer::VisionServer::cameraThread, this).detach();
 }
 
 //----------------------------------------------------------//
@@ -35,13 +22,14 @@ void VisionServer::VisionServer::worker(dev::TcpSocketServerConnection connectio
     {
         try
         {
-            cmd = connection.getline(' ');
+            cmd = connection.getline('\n');
+            std::cout << cmd << std::endl;
         }
         catch(std::exception& e)
         {
         }
 
-        if(cmd == "FIND")
+        if(cmd.find("FIND") != std::string::npos)
         {
             find(connection);
         }
@@ -52,63 +40,29 @@ void VisionServer::VisionServer::worker(dev::TcpSocketServerConnection connectio
 //  This function selects the appropriate algorithm, runs it and returns the results
 void VisionServer::VisionServer::find(dev::TcpSocketServerConnection& connection)
 {
-    std::string whatToFind = connection.getline(' ');
-    if(whatToFind == "YELLOWTOTE")
+    connection.put("Reached Here!\n");
+    std::string whatToFind = connection.getline('\n');
+    std::cout << whatToFind << std::endl;
+    whatToFind = "YELLOWTOTE";
+    std::string data = "";
+    if(whatToFind.find("YELLOWTOTE") != std::string::npos)
     {
-        std::string data = ::VisionServer::toString(::VisionServer::findYellowTotes(getImage(), ThresholdHost.getHigh("YellowTote"), ThresholdHost.getLow("YellowTote")));
-        connection.put("CLEN " + dev::toString(data.size()) + " " + data);
+        connection.put("Processing Yellow Totes!\n");
+        data = ::VisionServer::toString(::VisionServer::findPolygons("YellowTote", ThresholdHost));
     }
-//    else if(whatToFind == "GREYTOTE")
-//    {
-//        std::string data = ::VisionServer::toString(::VisionServer::findYellowTotes(getImage()), ThresholdHost.getHigh("GreyTote"), ThresholdHost.getLow("YellowTote"));
-//        connection.put("CLEN " + dev::toString(data.size()) + " " + data);
-//    }
-//    else if(whatToFind == "LITTER")
-//    {
-//        std::string data = ::VisionServer::toString(::VisionServer::findYellowTotes(getImage()), ThresholdHost.getHigh("Litter"), ThresholdHost.getLow("YellowTote"));
-//        connection.put("CLEN " + dev::toString(data.size()) + " " + data);
-//    }
-//    else if(whatToFind == "GARBAGECAN")
-//    {
-//        std::string data = ::VisionServer::toString(::VisionServer::findYellowTotes(getImage()), ThresholdHost.getHigh("GarbageCan"), ThresholdHost.getLow("YellowTote"));
-//        connection.put("CLEN " + dev::toString(data.size()) + " " + data);
-//    }
-    connection.put(' ');
-}
-
-//----------------------------------------------------------//
-//  This function runs the camera. The camera is run in a separate thread to prevent
-//      the camera buffer from overflowing and thus inducing terrible lag
-void VisionServer::VisionServer::cameraThread()
-{
-    //A temporary matrix. This will stay in scope throughout so we can prevent
-    //constantly allocating and deallocating.
-    cv::Mat tmp;
-    //Check if we were able to open the camera and begin to start retrieve the image!
-    if(cam.isOpened())
+    else if(whatToFind.find("GREYTOTE") != std::string::npos)
     {
-        while(true)
-        {
-            cam >> tmp;
-            if(!tmp.empty())
-            {
-                cam_thread_lock.lock();
-                ThreadedImage = tmp.clone();
-                cam_thread_lock.unlock();
-            }
-        }
+        data = ::VisionServer::toString(::VisionServer::findPolygons("GreyTote", ThresholdHost));
     }
-}
-
-//----------------------------------------------------------//
-//  Retrieves an image from the camera
-cv::Mat VisionServer::VisionServer::getImage()
-{
-    cv::Mat x;
-    cam_thread_lock.lock();
-    x = ThreadedImage.clone();
-    cam_thread_lock.unlock();
-    return x;
+    else if(whatToFind.find("LITTER") != std::string::npos)
+    {
+        data = ::VisionServer::toString(::VisionServer::findPolygons("Litter", ThresholdHost));
+    }
+    else if(whatToFind.find("GARBAGECAN") != std::string::npos)
+    {
+        data = ::VisionServer::toString(::VisionServer::findPolygons("GarbageCan", ThresholdHost));
+    }
+    connection.put("CLEN " + dev::toString(data.size()) + " " + data + " ");
 }
 
 void VisionServer::VisionServer::initializeThresholdHost()

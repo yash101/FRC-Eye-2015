@@ -6,7 +6,6 @@
 
 //Default constructor for the http server
 dev::http_server::http_server() {}
-
 void dev::http_server::worker(dev::TcpSocketServerConnection connection)
 {
     http_session session;
@@ -147,8 +146,9 @@ void dev::http_session::parse_request()
                 lines.push_back(buffer);
             }
 
-            //Process all of the boundaries
+            //Clear our buffer so that we don't start appending to it accidentally
             buffer = "";
+            //Process all of the boundaries
             if(lines.size() > 1)
             {
                 for(unsigned int i = 1; i < lines.size(); i++)
@@ -157,7 +157,7 @@ void dev::http_session::parse_request()
                     std::stringstream y(lines[i]);                      //Stringstreams allow us to serialize data and then process them
                                                                         //We load this part of the body into it so we can process it!
                     
-                    dev::getline(buffer, "\r\n", y);                //Get the first line (content-disposition)
+                    dev::getline(buffer, "\r\n", y);                    //Get the first line (content-disposition)
                     
                     std::string name = buffer.substr(dev::charPos(buffer, ';') + 8, buffer.size() - 1);     //Get the name of the field
                     name = name.substr(0, dev::charPos(name, '"'));     //Process the name and get rid of the quotation marks!

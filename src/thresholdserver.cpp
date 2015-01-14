@@ -119,7 +119,9 @@ void VisionServer::ThresholdServer::request_handler(dev::http_session& session)
         if(session.queries["type"] == "reg")
         {
             std::vector<uchar> buffer;
-            cv::imencode(".jpg", camera::Cam0::get(), buffer);
+            cv::Mat x;
+            cv::cvtColor(camera::Cam0::get(), x, CV_BGR2HSV);
+            cv::imencode(".jpg", x, buffer);
             for(unsigned int i = 0; i < buffer.size(); i++)
             {
                 session.response += (char) buffer[i];
@@ -160,7 +162,7 @@ void VisionServer::ThresholdServer::request_handler(dev::http_session& session)
         std::stringstream o;
         o << "<html><head><title>Threshold Values</title></head><body>";
         o << "<table style=\"margin: 0px;\">";
-        o << "<tr><th><h2>Maximum</h2></th><th><h2>Minumum</h2></th><th><h2>Midpass</h2></th><th><h2>Unprocessed</h2></th><th><h2>Thresholded</h2></th></tr>";
+        o << "<tr><th><h2>Name</h2></th><th><h2>Maximum</h2></th><th><h2>Minumum</h2></th><th><h2>Midpass</h2></th><th><h2>Unprocessed</h2></th><th><h2>Thresholded</h2></th></tr>";
         for(std::map<std::string, cv::Scalar>::const_iterator it = _high.begin(); it != _high.end(); ++it)
         {
             std::string rgbh = dev::toString(_high[it->first][0]) + ", " + dev::toString(_high[it->first][1]) + ", " + dev::toString(_high[it->first][2]);
@@ -173,6 +175,8 @@ void VisionServer::ThresholdServer::request_handler(dev::http_session& session)
             cv::Scalar low = _low[it->first];
             //Each of the rows
             o << "<tr>";
+            //The name of the field
+            o << "<td><h2>" << it->first << "</h2></td>";
             //Maximum
             o << "<td>";
             o << "<form style=\"margin: 0px;\" action=\"/setvalsw?type=high&name=" << it->first << "\" method=\"POST\">";

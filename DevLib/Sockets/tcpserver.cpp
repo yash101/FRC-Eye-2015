@@ -22,7 +22,7 @@ void dev::TcpSocketServer::start(int port)
     address.sin_addr.s_addr = htonl(INADDR_ANY);
     address.sin_port = htons(port);
     //Bind to the address/port specified. If this isn't successful, an exception will be thrown
-    if(bind(fd, (struct sockaddr*) &address, sizeof(address)) < 0) { throw SocketException("Unable to bind to socket!"); }
+    if(bind(fd, (struct sockaddr*) &address, sizeof(address)) < 0) { throw SocketException("Unable to bind to socket at port [" + dev::toString(port) + "]"); }
     //Begin listening in the socket
     listen(fd, 3);
     //Launch a new thread to listen for us. This thread detaches to allow this function to quite afterwards

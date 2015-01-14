@@ -23,5 +23,7 @@ namespace tool
             }
         }
     };
+
+    static ::tool::log Logger("log_main.txt");
 }
 #endif // LOG_HPP

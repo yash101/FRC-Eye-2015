@@ -21,16 +21,8 @@ namespace VisionServer
     protected:
         void worker(dev::TcpSocketServerConnection connection);
         void find(dev::TcpSocketServerConnection& connection);
-        void cameraThread();
-
-        std::mutex cam_thread_lock;
-        cv::Mat ThreadedImage;
-        cv::Mat getImage();
-
-        cv::VideoCapture cam;
     public:
-        VisionServer(int port, std::string location, int ThreshPort);
-        VisionServer(int port, int capDev, int ThreshPort);
+        VisionServer(int MainPort, int ThresholdConfigurationPort);
     };
 }
 #endif // VISIONSERVER_HPP

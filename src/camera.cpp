@@ -71,6 +71,14 @@ camera::Camera::~Camera()
     _img_lock.unlock();
 }
 
+void camera::Camera::sendStopSignal()
+{
+    _cont_mtx.lock();
+    _cont = false;
+    _cont_mtx.unlock();
+    _cam.release();
+}
+
 camera::Camera camera::newCamera(int device) { return camera::Camera("", device, CAMERA_DEVID); }
 camera::Camera camera::newCamera(std::string location) { return camera::Camera(location, -1, CAMERA_URI); }
 
@@ -80,3 +88,4 @@ static camera::Camera Cam0 = ::camera::newCamera(0);
 
 cv::Mat camera::Cam0::get() { return ::Cam0.get(); }
 cv::Mat camera::Cam0::getw() { return ::Cam0.getw(); }
+void camera::Cam0::stop() { ::Cam0.sendStopSignal(); }

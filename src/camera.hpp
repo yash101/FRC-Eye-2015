@@ -32,6 +32,7 @@ namespace camera
         void operator=(Camera& other);
         cv::Mat get();
         cv::Mat getw();
+        void sendStopSignal();
     };
 
     Camera newCamera(int device);
@@ -41,6 +42,7 @@ namespace camera
     {
         cv::Mat get();
         cv::Mat getw();
+        void stop();
     }
 }
 #endif // CAMERA_HPP
