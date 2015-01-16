@@ -17,9 +17,14 @@ std::vector<cv::Rect> VisionServer::findPolygons(std::string name, VisionServer:
 {
     //******PREPARE FOR SEARCH*******
     //This is our working image
-    cv::Mat workingImage;
-    //Convert our image to the HSV color space
-    cv::cvtColor(camera::Cam0::get(), workingImage, CV_BGR2HSV);
+    cv::Mat workingImage = camera::Cam0::get();
+
+    //Convert the image to the wanted color space
+    if(VisionServer::toCV(thresh.getOther(name).cvtColor) != -1)
+    {
+        cv::cvtColor(workingImage, workingImage, VisionServer::toCV(thresh.getOther(name).cvtColor));
+    }
+
     //Threshold our image with our threshold values
     cv::inRange(workingImage, thresh.getLow(name), thresh.getHigh(name), workingImage);
 

@@ -1,6 +1,9 @@
 #include "src/visionserver.hpp"
 #include "src/log.hpp"
 #include <signal.h>
+#include "DevLib/math.hpp"
+#include <iostream>
+#include <iomanip>
 
 void x(int x)
 {

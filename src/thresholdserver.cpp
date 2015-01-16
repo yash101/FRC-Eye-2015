@@ -5,6 +5,24 @@
 #include <sstream>
 #include <opencv2/imgproc/imgproc.hpp>
 #include "camera.hpp"
+
+ColorType VisionServer::fromString(std::string x)
+{
+    if(x.find("BGR") != std::string::npos) return BGR;
+    if(x.find("RGB") != std::string::npos) return RGB;
+    if(x.find("HSV") != std::string::npos) return HSV;
+    if(x.find("GRAY") != std::string::npos) return GRAY;
+    return BGR;
+}
+
+int ::VisionServer::toCV(ColorType x)
+{
+    if(x == HSV) return CV_BGR2HSV;
+    if(x == RGB) return CV_BGR2RGB;
+    if(x == GRAY) return CV_BGR2GRAY;
+    return -1;
+}
+
 VisionServer::ThresholdServer::ThresholdServer(int port)
 {
     start(port);
@@ -70,6 +88,7 @@ void VisionServer::ThresholdServer::request_handler(dev::http_session& session)
             );
             _other[session.queries["name"]].GaussianKernel = std::atoi(session.queries["GaussianKernel"].c_str());
             _other[session.queries["name"]].Epsilon = std::atoi(session.queries["Epsilon"].c_str());
+            _other[session.queries["name"]].cvtColor = VisionServer::fromString(session.queries["ColorSpace"]);
         }
         else if(session.queries["type"] == "low")
         {
@@ -80,6 +99,7 @@ void VisionServer::ThresholdServer::request_handler(dev::http_session& session)
             );
             _other[session.queries["name"]].GaussianKernel = std::atoi(session.queries["GaussianKernel"].c_str());
             _other[session.queries["name"]].Epsilon = std::atoi(session.queries["Epsilon"].c_str());
+            _other[session.queries["name"]].cvtColor = VisionServer::fromString(session.queries["ColorSpace"]);
         }
     }
     else if(session.path == "/setvals")
@@ -87,6 +107,7 @@ void VisionServer::ThresholdServer::request_handler(dev::http_session& session)
         //Process the request
         _other[session.queries["name"]].GaussianKernel = std::atoi(session.queries["GaussianKernel"].c_str());
         _other[session.queries["name"]].Epsilon = std::atoi(session.queries["Epsilon"].c_str());
+        _other[session.queries["name"]].cvtColor = VisionServer::fromString(session.queries["ColorSpace"]);
         if(session.queries["type"] == "high")
         {
             _high[session.queries["name"]] = cv::Scalar(
@@ -119,8 +140,12 @@ void VisionServer::ThresholdServer::request_handler(dev::http_session& session)
         if(session.queries["type"] == "reg")
         {
             std::vector<uchar> buffer;
-            cv::Mat x;
-            cv::cvtColor(camera::Cam0::get(), x, CV_BGR2HSV);
+            cv::Mat x = camera::Cam0::get();
+            if(VisionServer::toCV(getOther(session.queries["name"]).cvtColor) != -1)
+            {
+                std::cout << VisionServer::toCV(getOther(session.queries["name"]).cvtColor) << "->" << CV_BGR2HSV << std::endl;
+                cv::cvtColor(x, x, VisionServer::toCV(getOther(session.queries["name"]).cvtColor));
+            }
             cv::imencode(".jpg", x, buffer);
             for(unsigned int i = 0; i < buffer.size(); i++)
             {
@@ -131,9 +156,15 @@ void VisionServer::ThresholdServer::request_handler(dev::http_session& session)
         else
         {
             std::vector<uchar> buffer;
-            cv::Mat bufx;
-            cv::cvtColor(camera::Cam0::get(), bufx, CV_BGR2HSV);
-            cv::inRange(bufx, getLow(session.queries["name"]), getHigh(session.queries["name"]), bufx);
+
+            cv::Mat x = camera::Cam0::get();
+            if(VisionServer::toCV(getOther(session.queries["name"]).cvtColor) != -1)
+            {
+                std::cout << VisionServer::toCV(getOther(session.queries["name"]).cvtColor) << "->" << CV_BGR2HSV << std::endl;
+                cv::cvtColor(x, x, VisionServer::toCV(getOther(session.queries["name"]).cvtColor));
+            }
+
+            cv::inRange(x, getLow(session.queries["name"]), getHigh(session.queries["name"]), x);
             if(getOther(session.queries["name"]).GaussianKernel < 1)
             {
                 setOther(
@@ -148,8 +179,8 @@ void VisionServer::ThresholdServer::request_handler(dev::http_session& session)
                     VisionServer::ThresholdExtras(getOther(session.queries["name"]).GaussianKernel + 1, getOther(session.queries["name"]).Epsilon)
                 );
             }
-            cv::GaussianBlur(bufx, bufx, cv::Size(getOther(session.queries["name"]).GaussianKernel, getOther(session.queries["name"]).GaussianKernel), 0, 0, cv::BORDER_DEFAULT);
-            cv::imencode(".jpg", bufx, buffer);
+            cv::GaussianBlur(x, x, cv::Size(getOther(session.queries["name"]).GaussianKernel, getOther(session.queries["name"]).GaussianKernel), 0, 0, cv::BORDER_DEFAULT);
+            cv::imencode(".jpg", x, buffer);
             for(unsigned int i = 0; i < buffer.size(); i++)
             {
                 session.response += (char) buffer[i];
@@ -162,7 +193,7 @@ void VisionServer::ThresholdServer::request_handler(dev::http_session& session)
         std::stringstream o;
         o << "<html><head><title>Threshold Values</title></head><body>";
         o << "<table style=\"margin: 0px;\">";
-        o << "<tr><th><h2>Name</h2></th><th><h2>Maximum</h2></th><th><h2>Minumum</h2></th><th><h2>Midpass</h2></th><th><h2>Unprocessed</h2></th><th><h2>Thresholded</h2></th></tr>";
+        o << "<tr><th><h2>Maximum</h2></th><th><h2>Minumum</h2></th><th><h2>Midpass</h2></th><th><h2>Unprocessed</h2></th><th><h2>Thresholded</h2></th></tr>";
         for(std::map<std::string, cv::Scalar>::const_iterator it = _high.begin(); it != _high.end(); ++it)
         {
             std::string rgbh = dev::toString(_high[it->first][0]) + ", " + dev::toString(_high[it->first][1]) + ", " + dev::toString(_high[it->first][2]);
@@ -175,22 +206,28 @@ void VisionServer::ThresholdServer::request_handler(dev::http_session& session)
             cv::Scalar low = _low[it->first];
             //Each of the rows
             o << "<tr>";
-            //The name of the field
-            o << "<td><h2>" << it->first << "</h2></td>";
             //Maximum
             o << "<td>";
             o << "<form style=\"margin: 0px;\" action=\"/setvalsw?type=high&name=" << it->first << "\" method=\"POST\">";
             o << "<table style=\"background-color: rgb(" << rgbh << "); color: rgb(" << antirgbh << ");\">";
-                o << "<tr><td>Channel 1</td><td>Channel 2</td><td>Channel 3</td></tr>";
+                o << "<tr><td>Name</td><td>Channel 1</td><td>Channel 2</td><td>Channel 3</td></tr>";
                 o << "<tr>";
+                    //The name of the field
+                    o << "<td>" << it->first << "</td>";
                     o << "<td><input name=\"1\" type=\"range\" min=\"0\" max=\"255\" placeholder=\"Channel 1\" value=\"" << high[0] << "\"></td>";
                     o << "<td><input name=\"2\" type=\"range\" min=\"0\" max=\"255\" placeholder=\"Channel 1\" value=\"" << high[1] << "\"></td>";
                     o << "<td><input name=\"3\" type=\"range\" min=\"0\" max=\"255\" placeholder=\"Channel 1\" value=\"" << high[2] << "\"></td>";
                 o << "</tr>";
-                o << "<tr><td>Gaussian</td><td>Epsilon</td><td>Submit</td></tr>";
+                o << "<tr><td>Gaussian</td><td>Epsilon</td><td>Color Space<td>Submit</td></tr>";
                 o << "<tr>";
                     o << "<td><input name=\"GaussianKernel\" type=\"range\" min=\"1\" max=\"16\" placeholder=\"Channel 1\" value=\"" << _other[it->first].GaussianKernel << "\"></td>";
                     o << "<td><input name=\"Epsilon\" type=\"range\" min=\"0\" max=\"255\" placeholder=\"Channel 1\" value=\"" << _other[it->first].Epsilon << "\"></td>";
+                    o << "<td><select name=\"ColorSpace\">";
+                        o << "<option value=\"HSV\" " << ((VisionServer::toCV(getOther(it->first).cvtColor) == CV_BGR2HSV) ? "selected" : "") << "\">HSV</option>";
+                        o << "<option value=\"BGR\" " << ((VisionServer::toCV(getOther(it->first).cvtColor) == -1) ? "selected" : "") << ">BGR</option>";
+                        o << "<option value=\"RGB\" " << ((VisionServer::toCV(getOther(it->first).cvtColor) == CV_BGR2RGB) ? "selected" : "") << ">RGB</option>";
+                        o << "<option value=\"GRAY\" " << ((VisionServer::toCV(getOther(it->first).cvtColor) == CV_BGR2GRAY) ? "selected" : "") << ">GRAY</option>";
+                    o << "</select></td>";
                     o << "<td><input type=\"submit\" value=\"Submit\"></td>";
                 o << "</tr>";
             o << "</table></form>";
