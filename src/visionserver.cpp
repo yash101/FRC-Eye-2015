@@ -22,8 +22,7 @@ void VisionServer::VisionServer::worker(dev::TcpSocketServerConnection connectio
     {
         try
         {
-            cmd = connection.getline('\n');
-            std::cout << cmd << std::endl;
+            cmd = connection.getline(' ');
         }
         catch(std::exception& e)
         {
@@ -33,6 +32,11 @@ void VisionServer::VisionServer::worker(dev::TcpSocketServerConnection connectio
         {
             find(connection);
         }
+        else if(cmd.find("INFO") != std::string::npos)
+        {
+            cv::Mat t_ = camera::Cam0::getw();
+            connection.put(dev::toString(t_.cols) + " " + dev::toString(t_.rows) + " ");
+        }
     }
 }
 
@@ -40,14 +44,10 @@ void VisionServer::VisionServer::worker(dev::TcpSocketServerConnection connectio
 //  This function selects the appropriate algorithm, runs it and returns the results
 void VisionServer::VisionServer::find(dev::TcpSocketServerConnection& connection)
 {
-    connection.put("Reached Here!\n");
-    std::string whatToFind = connection.getline('\n');
-    std::cout << whatToFind << std::endl;
-    whatToFind = "YELLOWTOTE";
+    std::string whatToFind = connection.getline(' ');
     std::string data = "";
     if(whatToFind.find("YELLOWTOTE") != std::string::npos)
     {
-        connection.put("Processing Yellow Totes!\n");
         data = ::VisionServer::toString(::VisionServer::findPolygons("YellowTote", ThresholdHost));
     }
     else if(whatToFind.find("GREYTOTE") != std::string::npos)
@@ -62,7 +62,7 @@ void VisionServer::VisionServer::find(dev::TcpSocketServerConnection& connection
     {
         data = ::VisionServer::toString(::VisionServer::findPolygons("GarbageCan", ThresholdHost));
     }
-    connection.put("CLEN " + dev::toString(data.size()) + " " + data + " ");
+    connection.put(dev::toString(data.size()) + " " + data);
 }
 
 void VisionServer::VisionServer::initializeThresholdHost()

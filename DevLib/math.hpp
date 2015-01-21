@@ -7,6 +7,16 @@
 #endif
 #define DegToRadConstant PI / 180.f
 #define RadToDevConstant 180.f / PI
+#include "compat.hpp"
+#ifdef CXX11_SUPPORTED
+#include <functional>
+#endif
+//Shoud we dynamically calculate PI at program launch? Pretty useless!
+#ifdef CALCULATE_PI_DYNAMIC
+#ifndef CALCULATE_PI_DYNAMIC_PRECISION
+#define CALCULATE_PI_DYNAMIC_PRECISION  100000
+#endif
+#endif
 namespace dev
 {
     //Trigonometric conversion from radians to degrees
@@ -57,6 +67,78 @@ namespace dev
             x = !x;
         }
         return out;
+    }
+
+    template<typename FPA> FPA modulus(FPA number, FPA threshmax)
+    {
+        long long x = (FPA) number / (FPA) threshmax;
+        FPA ttlnum = x * threshmax;
+        return number - ttlnum;
+    }
+
+    inline long long factorial(char number)
+    {
+        long long out = 1;
+        for(long long i = 1; i <= number; i++)
+        {
+            out *= i;
+        }
+        return out;
+    }
+
+//This will only work with C++11+ (std::function())
+#ifdef CXX11_SUPPORTED
+    template<typename FPT> FPT summation(int start, int end, std::function<FPT(int iteration)> funct)
+    {
+        FPT outcome = (FPT) 0;
+        if(end < start)
+        {
+            for(int i = start; i >= end; i--)
+            {
+                outcome += funct(i);
+            }
+        }
+        else
+        {
+            for(int i = 0; i <= end; i++)
+            {
+                outcome += funct(i);
+            }
+        }
+        return outcome;
+    }
+#endif
+
+#ifdef CALCULATE_PI_DYNAMIC
+    const static long double pi = dev::piCalc<long double>(100000);
+#else
+    //Sorry, I like to get kinda retarded-accurate lol! This number was calculated in 32.1 minutes by the
+    //dev::piCalc() function!
+    const static long double pi = 3.14159265158979399070078575295639211617526598274707794189453125;
+#endif
+
+    template<typename FPA> FPA sin(FPA traj)
+    {
+        //Minimize the input to have a max value of PI
+        traj = dev::modulus(traj, (FPA) PI);
+        //Calculate PI!!! :D
+        return dev::summation<FPA>(0, 12, [&](int i)
+        {
+            long double numa = std::pow(-1.0, i);
+            long double dena = dev::factorial((char) (2.0 * i) + 1.0);
+            long double xexp = std::pow(traj, (2.0 * i) + 1);
+            return (numa / dena) * xexp;
+        });
+    }
+
+    template<typename FPA> FPA cos(FPA traj)
+    {
+        return dev::sin<FPA>(traj + dev::pi / 2);
+    }
+
+    template<typename FPA> FPA tan(FPA traj)
+    {
+        return dev::sin<FPA>(traj) / dev::cos<FPA>(traj);
     }
 }
 #endif // MATH_HPP

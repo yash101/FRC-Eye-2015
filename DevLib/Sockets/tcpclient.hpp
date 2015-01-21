@@ -19,9 +19,7 @@ namespace dev
         TcpClient(std::string location, int port);
         ~TcpClient();
         std::string get(int length);
-        char get();
-        bool put(std::string data);
-        bool put(char data);
+        void put(std::string data);
     };
 }
 #endif // TCPCLIENT_HPP

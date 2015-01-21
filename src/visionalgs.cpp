@@ -17,7 +17,7 @@ std::vector<cv::Rect> VisionServer::findPolygons(std::string name, VisionServer:
 {
     //******PREPARE FOR SEARCH*******
     //This is our working image
-    cv::Mat workingImage = camera::Cam0::get();
+    cv::Mat workingImage = camera::Cam0::getw();
 
     //Convert the image to the wanted color space
     if(VisionServer::toCV(thresh.getOther(name).cvtColor) != -1)
@@ -54,7 +54,6 @@ std::vector<cv::Rect> VisionServer::findPolygons(std::string name, VisionServer:
     std::vector<std::vector<cv::Point> > contours;
     //This is for the hierarchy
     std::vector<cv::Vec4i> hierarchy;
-
     //Find the contours in the image
     cv::findContours(workingImage, contours, hierarchy, CV_RETR_LIST, CV_CHAIN_APPROX_NONE, cv::Point(0, 0));
 
@@ -71,13 +70,11 @@ std::vector<cv::Rect> VisionServer::findPolygons(std::string name, VisionServer:
         cv::approxPolyDP(contours[i], poly[i], thresh.getOther(name).Epsilon, true);
 
         //Check the convexity of the polygon and skip this polygon if convexity isn't great!
-        if(!cv::isContourConvex(contours[i])) continue;
+        if(!cv::isContourConvex(poly[i])) continue;
 
         //Add this to our bounding rectangles
-        bound_rect.push_back(cv::boundingRect(cv::Mat(poly)));
+        bound_rect.push_back(cv::boundingRect(cv::Mat(poly[i])));
     }
-
-    std::cout << "Contours: " << bound_rect.size() << std::endl;
 
     //Return our search results
     return bound_rect;

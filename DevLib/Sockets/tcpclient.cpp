@@ -19,8 +19,6 @@ dev::TcpClient::TcpClient(std::string location)
 
 void dev::TcpClient::start(std::string address, int port)
 {
-    std::cout << "Address: " << address << std::endl;
-    std::cout << "Port: " << port << std::endl;
     fd = socket(AF_INET, SOCK_STREAM, 0);
     if(fd < 0)
     {
@@ -45,34 +43,22 @@ void dev::TcpClient::start(std::string address, int port)
 
 std::string dev::TcpClient::get(int length)
 {
-    std::string str;
     char* buffer = new char[length];
     if(read(fd, buffer, length) < 0)
     {
         throw dev::SocketException("DEVLIB ERROR. Read from socket failed");
     }
-    str = dev::toString(buffer);
+    std::string str = dev::toString(buffer);
     delete[] buffer;
     return str;
 }
 
-char dev::TcpClient::get()
-{
-    return get(1)[0];
-}
-
-bool dev::TcpClient::put(std::string data)
+void dev::TcpClient::put(std::string data)
 {
     if(write(fd, data.c_str(), data.size()) < 0)
     {
         throw dev::SocketException("DEVLIB ERROR. Write to socket failed");
     }
-    return true;
-}
-
-bool dev::TcpClient::put(char data)
-{
-    return put(dev::toString(data));
 }
 
 dev::TcpClient::~TcpClient()

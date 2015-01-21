@@ -143,7 +143,6 @@ void VisionServer::ThresholdServer::request_handler(dev::http_session& session)
             cv::Mat x = camera::Cam0::get();
             if(VisionServer::toCV(getOther(session.queries["name"]).cvtColor) != -1)
             {
-                std::cout << VisionServer::toCV(getOther(session.queries["name"]).cvtColor) << "->" << CV_BGR2HSV << std::endl;
                 cv::cvtColor(x, x, VisionServer::toCV(getOther(session.queries["name"]).cvtColor));
             }
             cv::imencode(".jpg", x, buffer);
@@ -160,7 +159,6 @@ void VisionServer::ThresholdServer::request_handler(dev::http_session& session)
             cv::Mat x = camera::Cam0::get();
             if(VisionServer::toCV(getOther(session.queries["name"]).cvtColor) != -1)
             {
-                std::cout << VisionServer::toCV(getOther(session.queries["name"]).cvtColor) << "->" << CV_BGR2HSV << std::endl;
                 cv::cvtColor(x, x, VisionServer::toCV(getOther(session.queries["name"]).cvtColor));
             }
 
