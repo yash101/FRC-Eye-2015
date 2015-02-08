@@ -1,0 +1,39 @@
+<html>
+	<head>
+		<title>Web Configuration Wizard</title>
+		<script type="text/javascript">
+		function get(location, callback)
+		{
+			var xhr = new XMLHttpRequest();
+			xhr.onreadystatechange = function()
+			{
+				if(callback != undefined && callback != null) callback(xhr.responseText);
+			};
+			request.open("GET", location, true);
+			request.timeout = 4000;
+			request.send();
+		}
+		function post(location, data, callback)
+		{
+			var xhr =  new XMLHttpRequest();
+			xhr.onreadystatechange = function()
+			{
+				if(callback != undefined && callback != null) callback(xhr.responseText);
+			}
+			request.open("POST", location, true);
+			request.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+			request.timeout = 4000;
+			request.send(data);
+		}
+		</script>
+		<style type="text/css">
+		</style>
+	</head>
+	<body>
+		<div id="top_header">
+			<h2>Web Configuration Wizard!</h2>
+			<input type="text" id="server_address" placeholder="Server Address Goes Here" value="localhost:2000">
+		</div>
+		<div id="content"></div>
+	</body>
+</html>

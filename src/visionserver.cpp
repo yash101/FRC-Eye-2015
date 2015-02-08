@@ -27,6 +27,7 @@ void VisionServer::VisionServer::worker(dev::TcpSocketServerConnection connectio
         catch(std::exception& e)
         {
         }
+        std::cout << "GOT: " << cmd << std::endl;
 
         if(cmd.find("FIND") != std::string::npos)
         {
@@ -36,6 +37,38 @@ void VisionServer::VisionServer::worker(dev::TcpSocketServerConnection connectio
         {
             cv::Mat t_ = camera::Cam0::getw();
             connection.put(dev::toString(t_.cols) + " " + dev::toString(t_.rows) + " ");
+        }
+        else if(cmd.find("SET") != std::string::npos)
+        {
+            cmd = connection.getline(' ');
+            if(cmd.find("THRESHOLD") != std::string::npos)
+            {
+                cmd = connection.getline(' ');
+                if(cmd.find("HIGH") != std::string::npos)
+                {
+                    std::string name = connection.getline(' ');
+                    ThresholdHost.setHigh(
+                        name,
+                         cv::Scalar(
+                            std::atof(connection.getline(' ').c_str()),
+                            std::atof(connection.getline(' ').c_str()),
+                            std::atof(connection.getline(' ').c_str())
+                        )
+                    );
+                }
+                else
+                {
+                    std::string name = connection.getline(' ');
+                    ThresholdHost.setLow(
+                        name,
+                        cv::Scalar(
+                            std::atof(connection.getline(' ').c_str()),
+                            std::atof(connection.getline(' ').c_str()),
+                            std::atof(connection.getline(' ').c_str())
+                        )
+                    );
+                }
+            }
         }
     }
 }

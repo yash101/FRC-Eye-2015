@@ -46,6 +46,7 @@ std::vector<cv::Rect> VisionServer::findPolygons(std::string name, VisionServer:
         0,
         cv::BORDER_DEFAULT
     );
+
     //Convert the image to a binary image (presumably will cause higher performance)
     cv::threshold(workingImage, workingImage, 128, 255, CV_THRESH_BINARY);
 
@@ -55,7 +56,7 @@ std::vector<cv::Rect> VisionServer::findPolygons(std::string name, VisionServer:
     //This is for the hierarchy
     std::vector<cv::Vec4i> hierarchy;
     //Find the contours in the image
-    cv::findContours(workingImage, contours, hierarchy, CV_RETR_LIST, CV_CHAIN_APPROX_NONE, cv::Point(0, 0));
+    cv::findContours(workingImage, contours, hierarchy, CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
 
     //Stores our polygons
     std::vector<std::vector<cv::Point> > poly(contours.size());

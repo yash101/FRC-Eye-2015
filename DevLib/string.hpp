@@ -42,26 +42,22 @@ namespace dev
         return false;
     }
 
-    inline std::string trim(std::string in)
+    inline void trim(std::string& in)
     {
-        std::string str = in;
-        for(unsigned int i = 0; i < str.size(); i++)
-        {
-            if(dev::contains(str[i], " \n\r\t"))
-            {
-                str = str.substr(1, str.size());
-            }
-        }
+        size_t i = 0;
+        while(std::isspace(in[i]) && i <= in.size()) i++;
+        in = in.substr(i, in.size());
 
-        for(int i = (unsigned int) str.size(); i >= 0; i--)
-        {
-            if(dev::contains(str[i], " \n\r\t"))
-            {
-                str = str.substr(0, str.size() - 1);
-            }
-        }
+        i = in.size();
+        while(std::isspace(in[i]) && i != 0) i--;
+        in = in.substr(0, i);
+    }
 
-        return str;
+    inline std::string itrim(std::string in)
+    {
+        std::string x = in;
+        dev::trim(x);
+        return x;
     }
 
     inline std::string tolower(std::string in)
@@ -93,6 +89,12 @@ namespace dev
         buffer = true;
         return false;
     }
+
+    inline int stoi(std::string str) { return std::atoi(str.c_str()); }
+    inline float stof(std::string str) { return std::atof(str.c_str()); }
+    inline long stol(std::string str) { return std::stol(str.c_str()); }
+    inline long long stoll(std::string str) { return std::atoll(str.c_str()); }
+    template<typename T> inline T ston(std::string in) { T x; std::stringstream(in) >> x; return x; }
 }
 
 inline bool operator==(std::string a, std::string b) { return !strcmp(a.c_str(), b.c_str()); }

@@ -49,7 +49,7 @@ void dev::TcpSocketServer::vhost(int connectionid)
     }
     catch(std::exception& e)
     {
-        std::cout << "Exited worker function due to error: " << e.what() << std::endl;
+//        std::cout << "Exited worker function due to error: " << e.what() << std::endl;
     }
 }
 

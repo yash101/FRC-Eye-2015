@@ -42,10 +42,10 @@ void dev::http_session::parse_request()
     else { throw dev::HTTPException("Unknown HTTP Method!"); }
 
     //Determine the path the client is requesting
-    path = dev::trim(connection.getline(' '));
+    path = dev::itrim(connection.getline(' '));
 
     //Determine the protocol the client wants us to use
-    protocol = dev::trim(connection.getline("\r\n"));
+    protocol = dev::itrim(connection.getline("\r\n"));
 
     //Download the rest of the request header
     std::string buffer;

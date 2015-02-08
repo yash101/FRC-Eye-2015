@@ -119,15 +119,10 @@ namespace dev
 
     template<typename FPA> FPA sin(FPA traj)
     {
-        //Minimize the input to have a max value of PI
-        traj = dev::modulus(traj, (FPA) PI);
         //Calculate PI!!! :D
         return dev::summation<FPA>(0, 12, [&](int i)
         {
-            long double numa = std::pow(-1.0, i);
-            long double dena = dev::factorial((char) (2.0 * i) + 1.0);
-            long double xexp = std::pow(traj, (2.0 * i) + 1);
-            return (numa / dena) * xexp;
+            return (std::pow(-1.0, i) / dev::factorial((char) 2.0 * i) + 1.0) * std::pow(dev::modulus(traj, (FPA) dev::pi), (2.0 * i) + 1);
         });
     }
 
@@ -140,5 +135,9 @@ namespace dev
     {
         return dev::sin<FPA>(traj) / dev::cos<FPA>(traj);
     }
+
+    template<typename FPA> FPA csc(FPA traj) { return (FPA) 1.0 / dev::sin<FPA>(traj); }
+    template<typename FPA> FPA sec(FPA traj) { return (FPA) 1.0 / dev::cos<FPA>(traj); }
+    template<typename FPA> FPA cot(FPA traj) { return (FPA) 1.0 / dev::tan<FPA>(traj); }
 }
 #endif // MATH_HPP
