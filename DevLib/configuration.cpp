@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <cstring>
+#include "../buildconf.h"
 
 //%%%%%%%%%%%%
 //  Constructor. Takes in configuration file location. If a file does not exist, it will
@@ -78,3 +79,10 @@ bool dev::ConfigurationParser::tryBool(std::string key)
     std::string b = dev::itrim(dev::tolower(_cfdata[key]));
     return b == "yes" || b == "1" || b == "true" || b == "on";
 }
+
+#ifndef CONFIGURATION_LOCATION
+#define CONFIGURATION_LOCATION "app.cfg"
+#endif
+
+dev::ConfigurationParser parser(CONFIGURATION_LOCATION);
+dev::ConfigurationParser& dev::getCFG() { return parser; }

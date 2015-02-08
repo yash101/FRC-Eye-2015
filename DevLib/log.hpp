@@ -4,7 +4,7 @@
 #include <fstream>
 #include "misc.hpp"
 #include "core.hpp"
-namespace tool
+namespace dev
 {
     class log
     {
@@ -23,7 +23,6 @@ namespace tool
             }
         }
     };
-
-    static ::tool::log Logger("log_main.txt");
+    dev::log& getLogger();
 }
 #endif // LOG_HPP

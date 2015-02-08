@@ -15,6 +15,7 @@ namespace dev
         exception(int code) : _message("exeption thrown!"), _code(code) {}
         ~exception() throw() {}
         virtual const char* what() const throw() { return _message.c_str(); }
+        int getCode() { return _code; }
     };
 }
 #endif // CORE_HPP

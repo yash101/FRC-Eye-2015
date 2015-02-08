@@ -21,5 +21,6 @@ namespace dev
         bool tryBool(std::string key);
         std::string getStorageLocation() { return _location; }
     };
+    ConfigurationParser& getCFG();
 }
 #endif // CONFIGURATION_HPP
